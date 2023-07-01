@@ -1,19 +1,20 @@
-module Main exposing (main)
+module RandomSuit exposing (..)
 
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (decodeValue, int)
 import Random exposing (Generator, Seed)
-import Task
+import Browser
+import Platform.Cmd as Cmd
 
 
 main : Program Decode.Value Model Msg
 main =
-    Html.programWithFlags
+    Browser.element
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = always Sub.none
         }
 
 
@@ -49,11 +50,12 @@ init json =
             case decodeValue int json of
                 Ok seed ->
                     seed
-
-                Err reason ->
-                    Debug.crash <| "Unable to decode program arguments: " ++ reason
+                Err err ->
+                    -1
+        mdl = 
+            Model Nothing (Random.initialSeed initialSeed)
     in
-    Model Nothing (Random.initialSeed initialSeed) ! []
+    ( mdl, Cmd.none )
 
 
 
@@ -67,8 +69,10 @@ update msg model =
             let
                 ( suit, nextSeed ) =
                     Random.step suitGenerator model.seed
+                mdl = 
+                    Model (Just suit) nextSeed
             in
-            Model (Just suit) nextSeed ! []
+                ( mdl, Cmd.none )
 
 
 numToSuit : Int -> Suit
@@ -123,14 +127,13 @@ withSuit : Suit -> Html Msg
 withSuit suit =
     case suit of
         Hearts ->
-            text "Hearts"
+            text "❤ Hearts"
 
         Diamonds ->
-            text "Diamonds"
+            text "♦️️ Diamonds"
 
         Spades ->
-            text "Spades"
+            text "♠ Spades"
 
         Clubs ->
-            text "Clubs"
-
+            text "️♣️ Clubs"
